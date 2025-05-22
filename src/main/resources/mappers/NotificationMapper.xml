@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.spring.notibotservice.notification.mapper.NotificationMapper">
+
+    <insert id="insertNotification" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO notification (
+            recipient_type,
+            channel,
+            title,
+            content,
+            status,
+            error_message,
+            sent_at,
+            scheduled_at,
+            created_at
+        ) VALUES (
+                     #{recipientType},
+                     #{channel},
+                     #{title},
+                     #{content},
+                     #{status},
+                     #{errorMessage},
+                     #{sentAt},
+                     #{scheduledAt},
+                     #{createdAt}
+                 )
+    </insert>
+
+    <update id="updateStatusToSent">
+        UPDATE notification
+        SET status = 'SENT',
+            sent_at = #{sentAt}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatusToFailed">
+        UPDATE notification
+        SET status = 'FAILED',
+            error_message = #{errorMessage}
+        WHERE id = #{id}
+    </update>
+
+    <select id="findPendingScheduledNotifications" resultType="com.example.spring.notibotservice.notification.domain.Notification">
+        <![CDATA[
+        SELECT *
+        FROM notification
+        WHERE status = 'PENDING'
+          AND scheduled_at <= #{now}
+        ]]>
+    </select>
+
+    <update id="bulkUpdateStatusToQueued">
+        UPDATE notification
+        SET status = 'QUEUED'
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <select id="findById" resultType="com.example.spring.notibotservice.notification.domain.Notification">
+        SELECT *
+        FROM notification
+        WHERE id = #{id}
+    </select>
+
+</mapper>
